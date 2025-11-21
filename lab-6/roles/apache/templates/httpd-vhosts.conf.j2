@@ -1,0 +1,34 @@
+<VirtualHost *:80>
+    ServerAdmin "{{ apache_server_admin }}"
+    DocumentRoot "/usr/local/apache2/htdocs/{{ apache_http_server_name }}"
+    ServerName www.{{ apache_http_server_name }}.com
+
+    <Directory "/usr/local/apache2/htdocs/{{ apache_http_server_name }}">
+        Options Indexes FollowSymLinks
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    ErrorLog "/usr/local/apache2/logs/{{ apache_http_server_name }}-error.log"
+    CustomLog "/usr/local/apache2/logs/{{ apache_http_server_name }}-access.log" common
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerAdmin "{{ apache_server_admin }}"
+    DocumentRoot "/usr/local/apache2/htdocs/{{ apache_https_server_name }}"
+    ServerName www.{{ apache_https_server_name }}.com
+
+    SSLEngine on
+    SSLCertificateFile "/usr/local/apache2/conf/ssl/server.crt"
+    SSLCertificateKeyFile "/usr/local/apache2/conf/ssl/server.key"
+
+    <Directory "/usr/local/apache2/htdocs/{{ apache_https_server_name }}">
+        Options Indexes FollowSymLinks
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    ErrorLog "/usr/local/apache2/logs/{{ apache_https_server_name }}-error.log"
+    CustomLog "/usr/local/apache2/logs/{{ apache_https_server_name }}-access.log" combined
+</VirtualHost>
+

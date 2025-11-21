@@ -1,0 +1,25 @@
+# Basic settings
+listen=YES
+listen_ipv6=NO
+anonymous_enable={{ vsftpd_anonymous_enable }}
+local_enable={{ vsftpd_local_enable }}
+write_enable={{ vsftpd_write_enable }}
+local_umask={{ vsftpd_local_umask }}
+dirmessage_enable=YES
+use_localtime=YES
+xferlog_enable=YES
+connect_from_port_20=YES
+
+# Security settings
+chroot_local_user={{ vsftpd_chroot_local_user }}
+allow_writeable_chroot={{ vsftpd_allow_writeable_chroot }}
+secure_chroot_dir=/var/run/vsftpd/empty
+pam_service_name=vsftpd
+
+# Passive mode settings
+pasv_enable={{ vsftpd_pasv_enable }}
+pasv_min_port={{ vsftpd_pasv_min_port }}
+pasv_max_port={{ vsftpd_pasv_max_port }}
+
+# SSL (disabled for simplicity)
+ssl_enable=NO

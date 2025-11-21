@@ -1,0 +1,51 @@
+---
+- name: Install vsftpd
+  ansible.builtin.apt:
+    name: vsftpd
+    state: present
+    update_cache: true
+  become: true
+
+- name: Create FTP user
+  ansible.builtin.user:
+    name: "{{ vsftpd_user }}"
+    group: "{{ vsftpd_group }}"
+    home: "{{ vsftpd_home }}"
+    shell: /bin/bash
+    create_home: true
+    state: present
+  become: true
+
+- name: Set FTP user password
+  ansible.builtin.user:
+    name: "{{ vsftpd_user }}"
+    password: "{{ vsftpd_password | password_hash('sha512') }}"
+  notify: Restart vsftpd
+  become: true
+
+- name: Ensure vsftpd home directory exists and has correct permissions
+  ansible.builtin.file:
+    path: "{{ vsftpd_home }}"
+    state: directory
+    owner: "{{ vsftpd_user }}"
+    group: "{{ vsftpd_group }}"
+    mode: '0755'
+  become: true
+
+- name: Configure vsftpd
+  ansible.builtin.template:
+    src: vsftpd.conf.j2
+    dest: /etc/vsftpd.conf
+    backup: true
+  notify: Restart vsftpd
+  become: true
+
+- name: Ensure vsftpd is running and enabled
+  ansible.builtin.systemd:
+    name: vsftpd
+    state: started
+    enabled: true
+  become: true
+
+- name: Ensure handlers are notified
+  ansible.builtin.meta: flush_handlers

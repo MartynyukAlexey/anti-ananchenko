@@ -1,0 +1,52 @@
+---
+- name: Check if OS is supported
+  ansible.builtin.fail:
+    msg: "Unsupported OS: {{ ansible_facts['distribution'] }}"
+  when: ansible_facts["distribution"] not in ["Debian", "Ubuntu"]
+
+- name: Include Debian tasks
+  ansible.builtin.include_tasks: Debian.yml
+  when: ansible_facts.os_family in ["Debian", "Ubuntu"]
+
+- name: Install Docker packages
+  ansible.builtin.package:
+    name: "{{ docker_packages }}"
+    state: present
+  notify: restart docker
+  become: true
+
+- name: Ensure /etc/docker/ directory exists
+  ansible.builtin.file:
+    path: /etc/docker
+    state: directory
+    mode: 0755
+  become: true
+
+- name: Ensure Docker is started and enabled at boot
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+  become: true
+
+- name: Ensure handlers are notified
+  ansible.builtin.meta: flush_handlers
+
+- name: Get docker group info using getent
+  ansible.builtin.getent:
+    database: group
+    key: docker
+    split: ":"
+  when: docker_users | length > 0
+
+- name: Check if there are any users to add to the docker group
+  ansible.builtin.set_fact:
+    at_least_one_user_to_modify: true
+  when:
+    - docker_users | length > 0
+    - item not in ansible_facts.getent_group["docker"][2]
+  loop: "{{ docker_users }}"
+
+- name: Include users tasks
+  ansible.builtin.include_tasks: users.yml
+  when: at_least_one_user_to_modify is defined

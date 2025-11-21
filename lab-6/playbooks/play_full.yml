@@ -1,0 +1,38 @@
+---
+- hosts: all
+  roles:
+    # installs docker 
+    - role: ../roles/docker
+      vars:
+        # allow non-root users to use docker
+        docker_users: ["{{ ansible_user }}"]
+
+    # runs apache server in container
+    - role: ../roles/apache
+      vars:
+        # used to generate ServerAdmin
+        apache_server_admin: MartynyukAlexey05@gmail.com
+
+        # following params are used to generate:
+        #   ServerName: (i.e. www.cats.com, www.dogs.com)
+        #   ErrorLog    (i.e. cats-error.log, dogs-error.log)
+        #   AccessLog   (i.e. cats-access.log, dogs-access.log)
+        apache_http_server_name: cats
+        apache_https_server_name: dogs
+
+        # path to a folder with web conent (html and css files, ...)
+        # IMPORTANT: must have 2 subfolders with the names from 
+        #            apache_http_server_name and apache_https_server_name
+        apache_content_path: "{{ role_path }}/files/"
+
+        # paths on host that would be binded to folders in container
+        apache_host_content_path: "/var/www/html"
+        apache_host_config_path: "/etc/apache2"
+        apache_host_log_path: "/usr/local/apache2/logs"
+
+    # installs sftp client
+    - role: ../roles/vsftpd
+      vars: 
+        # ftp connection setup
+        vsftpd_user: "ftpuser"
+        vsftpd_password: "password" 

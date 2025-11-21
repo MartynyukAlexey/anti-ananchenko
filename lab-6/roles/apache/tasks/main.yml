@@ -1,0 +1,97 @@
+---
+- name: Create host directory for web content
+  ansible.builtin.file:
+    path: "{{ apache_host_content_path }}"
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Create host directory for Apache configs
+  ansible.builtin.file:
+    path: "{{ apache_host_config_path }}"
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Create directory for Apache logs
+  ansible.builtin.file:
+    path: "{{ apache_host_log_path }}"
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Create SSL directory in config path
+  ansible.builtin.file:
+    path: "{{ apache_host_config_path }}/ssl"
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Generate private key
+  community.crypto.openssl_privatekey:
+    path: "{{ apache_host_config_path }}/ssl/server.key"
+    size: 2048
+    state: present
+  become: yes
+
+- name: Generate self-signed certificate
+  community.crypto.x509_certificate:
+    path: "{{ apache_host_config_path }}/ssl/server.crt"
+    privatekey_path: "{{ apache_host_config_path }}/ssl/server.key"
+    provider: selfsigned
+    state: present
+    selfsigned_not_after: "+365d"
+    selfsigned_not_before: "+0s"
+    selfsigned_digest: "sha256"
+    selfsigned_create_subject_key_identifier: create_if_not_provided
+    mode: "0644"
+  become: true
+
+- name: Generate Apache main configuration
+  ansible.builtin.template:
+    src: "httpd.conf.j2"
+    dest: "{{ apache_host_config_path }}/httpd.conf"
+    mode: "0644"
+    directory_mode: "0755"
+    backup: true
+  become: true
+
+- name: Generate Apache vhosts configuration
+  ansible.builtin.template:
+    src: "httpd-vhosts.conf.j2"
+    dest: "{{ apache_host_config_path }}/httpd-vhosts.conf"
+    mode: "0644"
+    directory_mode: "0755"
+    backup: true
+  become: true
+
+- name: Copy web content
+  ansible.builtin.copy:
+    src: "{{ apache_content_path }}"
+    dest: "{{ apache_host_content_path }}/"
+    mode: "0644"
+    directory_mode: "0755"
+  become: true
+
+- name: Run Apache container
+  community.docker.docker_container:
+    name: apache-server
+    image: httpd:2.4
+    state: started
+    restart: true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "{{ apache_host_config_path }}:/usr/local/apache2/conf"
+      - "{{ apache_host_log_path }}:/usr/local/apache2/logs"
+      - "{{ apache_host_content_path }}:/usr/local/apache2/htdocs"
+    command: "httpd-foreground"
+  become: true
+
+- name: Wait for Apache to be responsive
+  ansible.builtin.wait_for:
+    host: localhost
+    port: 80
+    state: started
+    timeout: 10

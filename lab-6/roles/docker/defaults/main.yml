@@ -1,0 +1,12 @@
+---
+
+docker_edition: "ce"
+docker_repo_url: https://download.docker.com/linux
+
+# Users from that list are added to docker group for docker access without sudo
+docker_users: []
+
+# Debian specific params
+docker_apt_release_channel: stable
+docker_apt_gpg_key: "{{ docker_repo_url }}/{{ ansible_facts.distribution | lower }}/gpg"
+docker_apt_filename: docker

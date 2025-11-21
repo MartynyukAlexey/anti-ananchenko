@@ -1,0 +1,11 @@
+---
+- name: restart docker
+  ansible.builtin.service:
+    name: docker
+    state: restarted
+  become: yes
+
+- name: apt update
+  ansible.builtin.apt:
+    update_cache: true
+  become: yes

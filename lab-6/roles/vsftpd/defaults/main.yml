@@ -1,0 +1,18 @@
+---
+
+# FTP user configuration
+vsftpd_user: "ftpuser"
+vsftpd_password: "password"
+vsftpd_group: "www-data"
+vsftpd_home: "/var/www/html"
+
+# vsftpd configuration
+vsftpd_anonymous_enable: "NO"
+vsftpd_local_enable: "YES"
+vsftpd_write_enable: "YES"
+vsftpd_local_umask: "022"
+vsftpd_chroot_local_user: "YES"
+vsftpd_allow_writeable_chroot: "YES"
+vsftpd_pasv_enable: "YES"
+vsftpd_pasv_min_port: 30000
+vsftpd_pasv_max_port: 31000
